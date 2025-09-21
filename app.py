@@ -19,7 +19,7 @@ def init_reddit():
         user_agent="Reddit Main Branches Extractor v1.0"
     )
 
-def extract_main_branches(reddit_url, num_replies=5):
+def extract_main_branches(reddit_url, num_replies=10):
     """Extract main comment branches with full text"""
     
     reddit = init_reddit()
@@ -131,7 +131,7 @@ st.markdown("Extract main comment branches from any Reddit post")
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Settings")
-    num_replies = st.slider("Replies per branch", 1, 30, 15)
+    num_replies = st.slider("Replies per branch", 1, 20, 10)
     st.markdown("---")
     st.markdown("### 📖 How to use:")
     st.markdown("1. Paste a Reddit post URL")
@@ -182,3 +182,4 @@ if extract_button and reddit_url:
 # Footer
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit")
+
