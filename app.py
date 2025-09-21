@@ -131,7 +131,7 @@ st.markdown("Extract main comment branches from any Reddit post")
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Settings")
-    num_replies = st.slider("Replies per branch", 1, 20, 5)
+    num_replies = st.slider("Replies per branch", 1, 30, 15)
     st.markdown("---")
     st.markdown("### 📖 How to use:")
     st.markdown("1. Paste a Reddit post URL")
