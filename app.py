@@ -293,7 +293,7 @@ def extract_main_branches(reddit_url, num_replies=10):
         return st.session_state["__results_text"], filename, branch_count
         
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"❌ Error: {e}")
         return None, None, 0
 
 # Main UI
@@ -324,6 +324,28 @@ with col2:
     st.markdown("<br>", unsafe_allow_html=True)  # Spacing
     extract_button = st.button("🚀 Extract", type="primary")
 
+# ---- ALWAYS-SHOWN downloads (persist across reruns) ----
+downloads_container = st.container()
+with downloads_container:
+    if st.session_state.get("__results_text") and st.session_state.get("__results_filename"):
+        st.download_button(
+            label="📄 Download Results",
+            data=st.session_state["__results_text"],
+            file_name=st.session_state["__results_filename"],
+            mime="text/plain",
+            key="dl_results_btn",
+            use_container_width=True
+        )
+    if st.session_state.get("__media_zip_bytes") and st.session_state.get("__media_zip_name"):
+        st.download_button(
+            label="📦 Download OP Media (ZIP)",
+            data=st.session_state["__media_zip_bytes"],
+            file_name=st.session_state["__media_zip_name"],
+            mime="application/zip",
+            key="dl_media_btn",
+            use_container_width=True
+        )
+
 # Results section
 if extract_button and reddit_url:
     if not reddit_url.startswith("https://www.reddit.com/"):
@@ -331,39 +353,18 @@ if extract_button and reddit_url:
     else:
         with st.spinner("Processing..."):
             content, filename, branch_count = extract_main_branches(reddit_url, num_replies)
-            
             if content:
                 st.success(f"✅ Extracted {branch_count} main branches!")
 
-                # --- Download buttons ABOVE the preview ---
-                if st.session_state.get("__results_text") and st.session_state.get("__results_filename"):
-                    st.download_button(
-                        label="📄 Download Results",
-                        data=st.session_state["__results_text"],
-                        file_name=st.session_state["__results_filename"],
-                        mime="text/plain",
-                        key="dl_results_btn",
-                        use_container_width=True
-                    )
-
-                if st.session_state.get("__media_zip_bytes") and st.session_state.get("__media_zip_name"):
-                    st.download_button(
-                        label="📦 Download OP Media (ZIP)",
-                        data=st.session_state["__media_zip_bytes"],
-                        file_name=st.session_state["__media_zip_name"],
-                        mime="application/zip",
-                        key="dl_media_btn",
-                        use_container_width=True
-                    )
-                # ------------------------------------------
-
-                # Preview
-                with st.expander("👁️ Preview Results", expanded=True):
-                    st.text_area(
-                        "Content Preview",
-                        content[:2000] + "\n\n... (truncated for preview)" if len(content) > 2000 else content,
-                        height=300
-                    )
+# Preview stays visible after reruns
+if st.session_state.get("__results_text"):
+    with st.expander("👁️ Preview Results", expanded=True):
+        preview_text = st.session_state["__results_text"]
+        st.text_area(
+            "Content Preview",
+            preview_text[:2000] + "\n\n... (truncated for preview)" if len(preview_text) > 2000 else preview_text,
+            height=300
+        )
 
 # Footer
 st.markdown("---")
