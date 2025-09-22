@@ -15,6 +15,45 @@ st.set_page_config(
     layout="wide"
 )
 
+# NEW: color the two download buttons without changing their location or code
+st.markdown("""
+<style>
+/* First st.download_button on the page: 📄 Download Results -> green */
+div[data-testid="stDownloadButton"]:nth-of-type(1) button,
+div[data-testid="stDownloadButton"]:nth-of-type(1) a {
+    background-color: #16a34a !important;  /* green */
+    color: #ffffff !important;
+    border: 1px solid #15803d !important;
+}
+div[data-testid="stDownloadButton"]:nth-of-type(1) button:hover,
+div[data-testid="stDownloadButton"]:nth-of-type(1) a:hover {
+    background-color: #15803d !important;
+    color: #ffffff !important;
+    border-color: #166534 !important;
+}
+
+/* Second st.download_button on the page: 📦 Download OP Media (ZIP) -> orange */
+div[data-testid="stDownloadButton"]:nth-of-type(2) button,
+div[data-testid="stDownloadButton"]:nth-of-type(2) a {
+    background-color: #f59e0b !important;  /* orange */
+    color: #1f2937 !important;
+    border: 1px solid #d97706 !important;
+}
+div[data-testid="stDownloadButton"]:nth-of-type(2) button:hover,
+div[data-testid="stDownloadButton"]:nth-of-type(2) a:hover {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+    border-color: #b45309 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- MINIMAL: persist results across reruns so download clicks don't reset UI ---
+for k in ["__content", "__filename", "__branch_count", "__media_zip_buf", "__media_zip_name"]:
+    if k not in st.session_state:
+        st.session_state[k] = None
+# -------------------------------------------------------------------------------
+
 # Initialize Reddit API
 @st.cache_resource
 def init_reddit():
@@ -340,36 +379,43 @@ if extract_button and reddit_url:
     else:
         with st.spinner("Processing..."):
             content, filename, branch_count = extract_main_branches(reddit_url, num_replies)
-            
+            # MINIMAL: save results to session so downloads do not clear UI
             if content:
-                st.success(f"✅ Extracted {branch_count} main branches!")
-                
-                # Download button - text
-                st.download_button(
-                    label="📄 Download Results",
-                    data=content,
-                    file_name=filename,
-                    mime="text/plain"
-                )
+                st.session_state["__content"] = content
+                st.session_state["__filename"] = filename
+                st.session_state["__branch_count"] = branch_count
 
-                # NEW: media ZIP button
-                zip_buf = st.session_state.get("__media_zip_buf")
-                zip_name = st.session_state.get("__media_zip_name")
-                if zip_buf and zip_name:
-                    st.download_button(
-                        label="📦 Download OP Media (ZIP)",
-                        data=zip_buf,
-                        file_name=zip_name,
-                        mime="application/zip"
-                    )
-                
-                # Preview
-                with st.expander("👁️ Preview Results", expanded=True):
-                    st.text_area(
-                        "Content Preview",
-                        content[:2000] + "\n\n... (truncated for preview)" if len(content) > 2000 else content,
-                        height=300
-                    )
+# MINIMAL: render results from session so both downloads persist after clicks
+if st.session_state.get("__content"):
+    st.success(f"✅ Extracted {st.session_state['__branch_count']} main branches!")
+    
+    # Download button - text (same place and label)
+    st.download_button(
+        label="📄 Download Results",
+        data=st.session_state["__content"],
+        file_name=st.session_state["__filename"],
+        mime="text/plain"
+    )
+
+    # Media ZIP button (same place and label)
+    zip_buf = st.session_state.get("__media_zip_buf")
+    zip_name = st.session_state.get("__media_zip_name")
+    if zip_buf and zip_name:
+        st.download_button(
+            label="📦 Download OP Media (ZIP)",
+            data=zip_buf,
+            file_name=zip_name,
+            mime="application/zip"
+        )
+    
+    # Preview
+    with st.expander("👁️ Preview Results", expanded=True):
+        c = st.session_state["__content"]
+        st.text_area(
+            "Content Preview",
+            c[:2000] + "\n\n... (truncated for preview)" if len(c) > 2000 else c,
+            height=300
+        )
 
 # Footer
 st.markdown("---")
