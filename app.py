@@ -44,16 +44,39 @@ def extract_main_branches(reddit_url, num_replies=10):
         content = []
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Build OP body text (added)
-        if getattr(submission, "is_self", False) and submission.selftext:
-            op_body = submission.selftext
-        else:
-            # Fallback for link or media posts
-            op_body = f"(no self text body, original link: {submission.url})"
-        
+        # ---------- OP BODY: updated to handle image/video with text ----------
+        op_body = (submission.selftext or "").strip()
+        if not op_body:
+            # Try gallery captions if present
+            try:
+                if getattr(submission, "is_gallery", False):
+                    items = getattr(submission, "gallery_data", {}).get("items", [])
+                    caps = []
+                    for i, it in enumerate(items, start=1):
+                        cap = it.get("caption")
+                        if cap:
+                            caps.append(f"[Image {i}] {cap}")
+                    if caps:
+                        op_body = " | ".join(caps)
+                    else:
+                        op_body = f"(gallery post with {len(items)} images) {submission.url}"
+                else:
+                    # Crosspost parent may hold text on some posts
+                    parent_list = getattr(submission, "crosspost_parent_list", None)
+                    if parent_list and isinstance(parent_list, list) and parent_list:
+                        parent_text = (parent_list[0].get("selftext") or "").strip()
+                        if parent_text:
+                            op_body = parent_text
+                    # Final fallback
+                    if not op_body:
+                        op_body = f"(no body text, original link: {submission.url})"
+            except Exception:
+                op_body = f"(no body text, original link: {submission.url})"
+        # ---------------------------------------------------------------------
+
         # Header
         content.append(f"POST: {submission.title}")
-        content.append(f"BODY: {op_body}")  # <-- added line to include OP body
+        content.append(f"BODY: {op_body}")  # include OP body
         content.append(f"SUBREDDIT: r/{submission.subreddit}")
         content.append(f"AUTHOR: u/{submission.author}")
         content.append(f"URL: {reddit_url}")
