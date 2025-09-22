@@ -334,7 +334,29 @@ if extract_button and reddit_url:
             
             if content:
                 st.success(f"✅ Extracted {branch_count} main branches!")
-                
+
+                # --- Download buttons ABOVE the preview ---
+                if st.session_state.get("__results_text") and st.session_state.get("__results_filename"):
+                    st.download_button(
+                        label="📄 Download Results",
+                        data=st.session_state["__results_text"],
+                        file_name=st.session_state["__results_filename"],
+                        mime="text/plain",
+                        key="dl_results_btn",
+                        use_container_width=True
+                    )
+
+                if st.session_state.get("__media_zip_bytes") and st.session_state.get("__media_zip_name"):
+                    st.download_button(
+                        label="📦 Download OP Media (ZIP)",
+                        data=st.session_state["__media_zip_bytes"],
+                        file_name=st.session_state["__media_zip_name"],
+                        mime="application/zip",
+                        key="dl_media_btn",
+                        use_container_width=True
+                    )
+                # ------------------------------------------
+
                 # Preview
                 with st.expander("👁️ Preview Results", expanded=True):
                     st.text_area(
@@ -342,27 +364,6 @@ if extract_button and reddit_url:
                         content[:2000] + "\n\n... (truncated for preview)" if len(content) > 2000 else content,
                         height=300
                     )
-
-# --- Persistent download buttons (survive reruns) ---
-if st.session_state.get("__results_text") and st.session_state.get("__results_filename"):
-    st.download_button(
-        label="📄 Download Results",
-        data=st.session_state["__results_text"],
-        file_name=st.session_state["__results_filename"],
-        mime="text/plain",
-        key="dl_results_btn",
-        use_container_width=True
-    )
-
-if st.session_state.get("__media_zip_bytes") and st.session_state.get("__media_zip_name"):
-    st.download_button(
-        label="📦 Download OP Media (ZIP)",
-        data=st.session_state["__media_zip_bytes"],
-        file_name=st.session_state["__media_zip_name"],
-        mime="application/zip",
-        key="dl_media_btn",
-        use_container_width=True
-    )
 
 # Footer
 st.markdown("---")
