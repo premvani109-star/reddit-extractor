@@ -44,8 +44,16 @@ def extract_main_branches(reddit_url, num_replies=10):
         content = []
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
+        # Build OP body text (added)
+        if getattr(submission, "is_self", False) and submission.selftext:
+            op_body = submission.selftext
+        else:
+            # Fallback for link or media posts
+            op_body = f"(no self text body, original link: {submission.url})"
+        
         # Header
         content.append(f"POST: {submission.title}")
+        content.append(f"BODY: {op_body}")  # <-- added line to include OP body
         content.append(f"SUBREDDIT: r/{submission.subreddit}")
         content.append(f"AUTHOR: u/{submission.author}")
         content.append(f"URL: {reddit_url}")
@@ -182,6 +190,3 @@ if extract_button and reddit_url:
 # Footer
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit")
-
-
-
